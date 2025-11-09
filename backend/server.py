@@ -369,9 +369,9 @@ async def export_moods(format: str = Query("csv", regex="^(csv|json)$"), current
         )
 
 @api_router.delete("/moods/{mood_id}")
-async def delete_mood_entry(mood_id: str):
+async def delete_mood_entry(mood_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a mood entry"""
-    result = await db.mood_entries.delete_one({"id": mood_id})
+    result = await db.mood_entries.delete_one({"id": mood_id, "user_id": current_user['id']})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Mood entry not found")
