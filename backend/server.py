@@ -217,9 +217,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     }
 
 @api_router.post("/moods", response_model=MoodEntry)
-async def create_mood_entry(input: MoodEntryCreate):
+async def create_mood_entry(input: MoodEntryCreate, current_user: dict = Depends(get_current_user)):
     """Create a new mood entry"""
-    mood_obj = MoodEntry(**input.model_dump())
+    mood_obj = MoodEntry(**input.model_dump(), user_id=current_user['id'])
     
     # Convert to dict and serialize datetime to ISO string for MongoDB
     doc = mood_obj.model_dump()
