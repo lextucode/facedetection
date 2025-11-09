@@ -298,9 +298,9 @@ async def get_mood_entries(
     return mood_entries
 
 @api_router.get("/moods/stats")
-async def get_mood_stats():
+async def get_mood_stats(current_user: dict = Depends(get_current_user)):
     """Get mood statistics for charts"""
-    mood_entries = await db.mood_entries.find({}, {"_id": 0}).to_list(1000)
+    mood_entries = await db.mood_entries.find({"user_id": current_user['id']}, {"_id": 0}).to_list(1000)
     
     # Count by mood
     mood_counts = {"happy": 0, "sad": 0, "angry": 0, "anxious": 0, "neutral": 0}
