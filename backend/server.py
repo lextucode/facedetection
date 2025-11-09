@@ -146,6 +146,76 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 async def root():
     return {"message": "Mood Tracker API"}
 
+# Authentication endpoints
+@api_router.post("/auth/register", response_model=Token)
+async def register(user_data: UserRegister):
+    """Register a new user"""
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    existing_username = await db.users.find_one({"username": user_data.username})
+    if existing_username:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # Create new user
+    user = User(
+        username=user_data.username,
+        email=user_data.email,
+        password_hash=hash_password(user_data.password)
+    )
+    
+    # Save to database
+    user_dict = user.model_dump()
+    user_dict['created_at'] = user_dict['created_at'].isoformat()
+    await db.users.insert_one(user_dict)
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user.id})
+    
+    return Token(
+        access_token=access_token,
+        user={
+            "id": user.id,
+            "username": user.username,
+            "email": user.email
+        }
+    )
+
+@api_router.post("/auth/login", response_model=Token)
+async def login(credentials: UserLogin):
+    """Login user"""
+    # Find user by email
+    user = await db.users.find_one({"email": credentials.email})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Verify password
+    if not verify_password(credentials.password, user['password_hash']):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user['id']})
+    
+    return Token(
+        access_token=access_token,
+        user={
+            "id": user['id'],
+            "username": user['username'],
+            "email": user['email']
+        }
+    )
+
+@api_router.get("/auth/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """Get current user info"""
+    return {
+        "id": current_user['id'],
+        "username": current_user['username'],
+        "email": current_user['email']
+    }
+
 @api_router.post("/moods", response_model=MoodEntry)
 async def create_mood_entry(input: MoodEntryCreate):
     """Create a new mood entry"""
