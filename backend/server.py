@@ -275,10 +275,11 @@ async def detect_emotion(file: UploadFile = File(...), current_user: dict = Depe
 @api_router.get("/moods", response_model=List[MoodEntry])
 async def get_mood_entries(
     start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None)
+    end_date: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
 ):
     """Get all mood entries with optional date filtering"""
-    query = {}
+    query = {"user_id": current_user['id']}
     
     if start_date or end_date:
         query['timestamp'] = {}
