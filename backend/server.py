@@ -109,12 +109,15 @@ async def detect_emotion(file: UploadFile = File(...)):
         
         # Map to our mood categories
         mapped_emotion = EMOTION_MAP.get(dominant_emotion.lower(), "neutral")
-        confidence = emotions.get(dominant_emotion, 0)
+        confidence = float(emotions.get(dominant_emotion, 0))
+        
+        # Convert numpy types to Python native types for JSON serialization
+        all_emotions_converted = {k: float(v) for k, v in emotions.items()}
         
         return EmotionDetectionResponse(
             emotion=mapped_emotion,
             confidence=confidence,
-            all_emotions=emotions
+            all_emotions=all_emotions_converted
         )
     
     except Exception as e:
