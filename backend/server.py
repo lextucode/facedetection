@@ -327,9 +327,9 @@ async def get_mood_stats(current_user: dict = Depends(get_current_user)):
     }
 
 @api_router.get("/moods/export")
-async def export_moods(format: str = Query("csv", regex="^(csv|json)$")):
+async def export_moods(format: str = Query("csv", regex="^(csv|json)$"), current_user: dict = Depends(get_current_user)):
     """Export mood data as CSV or JSON"""
-    mood_entries = await db.mood_entries.find({}, {"_id": 0}).sort("timestamp", -1).to_list(1000)
+    mood_entries = await db.mood_entries.find({"user_id": current_user['id']}, {"_id": 0}).sort("timestamp", -1).to_list(1000)
     
     # Convert timestamps to string format
     for entry in mood_entries:
