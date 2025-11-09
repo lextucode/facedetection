@@ -229,7 +229,7 @@ async def create_mood_entry(input: MoodEntryCreate, current_user: dict = Depends
     return mood_obj
 
 @api_router.post("/moods/detect", response_model=EmotionDetectionResponse)
-async def detect_emotion(file: UploadFile = File(...)):
+async def detect_emotion(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     """Detect emotion from uploaded image using DeepFace"""
     try:
         # Read image file
